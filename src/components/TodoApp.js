@@ -18,7 +18,7 @@ const COLUMNS = {
   DONE: "Done",
 };
 
-const TodoApp = ({ projectId }) => {
+const TodoApp = ({ projectId, projectName }) => {
   const { user } = useAuth();
   const [project, setProject] = useState(null);
   const [todos, setTodos] = useState([]);
@@ -124,13 +124,39 @@ const TodoApp = ({ projectId }) => {
     e.preventDefault();
   };
 
-  const handleDrop = (status) => {
+  const handleDrop = async (status) => {
     if (draggedItem) {
+      // First update local state for immediate UI feedback
       setTodos(
         todos.map((todo) =>
           todo._id === draggedItem._id ? { ...todo, status } : todo
         )
       );
+
+      // Then persist the change to the database
+      try {
+        const response = await fetch(`/api/todos/${draggedItem._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...draggedItem,
+            status
+          }),
+        });
+
+        if (!response.ok) {
+          // If the server update fails, revert the local state
+          setTodos(todos);
+          console.error('Failed to update todo status');
+        }
+      } catch (error) {
+        // If there's an error, revert the local state
+        setTodos(todos);
+        console.error('Error updating todo status:', error);
+      }
+
       setDraggedItem(null);
     }
   };
@@ -221,7 +247,9 @@ const TodoApp = ({ projectId }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted py-8 px-4">
         <div className="max-w-md mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Welcome to Kanban Board</h1>
+          <h1 className="text-2xl font-bold mb-4">
+            Welcome to Kanban Board
+          </h1>
           <p className="text-muted-foreground mb-4">
             Please login to manage your tasks
           </p>
@@ -242,7 +270,7 @@ const TodoApp = ({ projectId }) => {
         <div className="mb-8 rounded-lg border bg-card text-card-foreground shadow">
           <div className="flex flex-col space-y-1.5 p-6">
             <h1 className="text-2xl font-semibold text-foreground">
-              Kanban Board
+              Kanban Board: {projectName}
             </h1>
             <p className="text-sm text-muted-foreground">
               Organize your tasks efficiently

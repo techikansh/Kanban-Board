@@ -34,7 +34,7 @@ export default function ProjectDetails({ project, onUpdate }) {
   };
 
   if (showTodoApp) {
-    return <TodoApp projectId={project._id} />;
+    return <TodoApp projectId={project._id} projectName={project.title} />;
   }
 
   return (
