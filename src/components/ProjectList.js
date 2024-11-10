@@ -23,12 +23,25 @@ export default function ProjectList() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('/api/projects');
+        let url = '/api/projects';
+        const params = new URLSearchParams();
+        
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+        if (endDate) {
+          params.append('endDate', endDate);
+        }
+        
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
+
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Fetched projects:', data); // Debug log
         setProjects(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching projects:', error);
@@ -36,9 +49,10 @@ export default function ProjectList() {
     };
 
     if (user) {
-      fetchProjects();
+      const debounceTimer = setTimeout(fetchProjects, 300);
+      return () => clearTimeout(debounceTimer);
     }
-  }, [user]);
+  }, [user, searchQuery, endDate]);
 
   const handleCreateProject = async (e) => {
     e.preventDefault();

@@ -3,6 +3,7 @@ import { createTodo, validateTodo } from '@/models/Todo';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 
 export async function GET(request) {
   try {
@@ -14,16 +15,24 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    const db = await connectToDatabase();
+
+    // First check if user has access to the project
+    const project = await db.collection('projects').findOne({
+      _id: new ObjectId(projectId),
+      $or: [
+        { userId: session.user.id },
+        { 'members.userId': session.user.id }
+      ]
+    });
+
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found or unauthorized' }, { status: 404 });
     }
 
-    const db = await connectToDatabase();
+    // If user has access, fetch the todos
     const todos = await db.collection('todos')
-      .find({ 
-        projectId: projectId,
-        userId: session.user.id 
-      })
+      .find({ projectId })
       .toArray();
 
     return NextResponse.json(todos);

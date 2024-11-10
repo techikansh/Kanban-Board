@@ -5,6 +5,12 @@ const ProjectSchema = {
   clientPayment: Number,
   storyPoints: Number,
   userId: String,
+  members: [{
+    userId: String,
+    email: String,
+    role: String,
+    addedAt: Date
+  }],
   createdAt: Date,
   updatedAt: Date
 };
@@ -17,6 +23,7 @@ export function createProject(data) {
     clientPayment: data.clientPayment || 0,
     storyPoints: data.storyPoints || 0,
     userId: data.userId,
+    members: [],
     createdAt: new Date(),
     updatedAt: new Date()
   };
@@ -28,6 +35,7 @@ export function validateProject(project) {
     typeof project.title === 'string' &&
     project.userId &&
     (!project.dueDate || project.dueDate instanceof Date) &&
-    (!project.clientPayment || typeof project.clientPayment === 'number')
+    (!project.clientPayment || typeof project.clientPayment === 'number') &&
+    Array.isArray(project.members)
   );
 } 

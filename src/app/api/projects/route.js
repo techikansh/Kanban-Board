@@ -11,15 +11,48 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get('search');
+    const endDate = searchParams.get('endDate');
+
+    // Build the query
+    const query = {
+      $or: [
+        { userId: session.user.id },
+        { 'members.userId': session.user.id }
+      ]
+    };
+
+    // Add search filter if provided
+    if (searchQuery) {
+      query.$and = [{
+        $or: [
+          { title: { $regex: searchQuery, $options: 'i' } },
+          { description: { $regex: searchQuery, $options: 'i' } }
+        ]
+      }];
+    }
+
+    // Add end date filter if provided
+    if (endDate) {
+      if (!query.$and) query.$and = [];
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999); // Set to end of day
+      query.$and.push({
+        dueDate: { 
+          $lte: endDateTime.toISOString()
+        }
+      });
+    }
+
     const db = await connectToDatabase();
-    console.log('Fetching projects for user:', session.user.id); // Debug log
     const projects = await db.collection('projects')
-      .find({ userId: session.user.id })
+      .find(query)
       .toArray();
-    console.log('Found projects:', projects); // Debug log
+
     return NextResponse.json(projects);
   } catch (error) {
-    console.error('Error in GET /api/projects:', error); // Debug log
+    console.error('Error in GET /api/projects:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

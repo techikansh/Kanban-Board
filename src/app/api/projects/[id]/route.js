@@ -15,7 +15,10 @@ export async function GET(request, { params }) {
     const db = await connectToDatabase();
     const project = await db.collection('projects').findOne({
       _id: new ObjectId(id),
-      userId: session.user.id
+      $or: [
+        { userId: session.user.id },
+        { 'members.userId': session.user.id }
+      ]
     });
 
     if (!project) {

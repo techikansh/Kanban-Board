@@ -1,13 +1,33 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, DollarSign, Hash, User, Edit2, Check, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import ProjectMembers from './ProjectMembers';
 
-export default function ProjectDetails({ project, onUpdate }) {
+export default function ProjectDetails({ project: initialProject, onUpdate }) {
   const { user } = useAuth();
+  const [project, setProject] = useState(initialProject);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProject, setEditedProject] = useState(project);
+
+  // Update local state when project prop changes
+  useEffect(() => {
+    setProject(initialProject);
+    setEditedProject(initialProject);
+  }, [initialProject]);
+
+  // Check if current user is owner or editor
+  const isOwner = project?.userId === user?.id;
+  const userRole = project?.members?.find(m => m.userId === user?.id)?.role || null;
+  const canEdit = isOwner || userRole === 'editor';
+
+  const handleProjectUpdate = (updatedProject) => {
+    setProject(updatedProject);
+    if (onUpdate) {
+      onUpdate(updatedProject);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -25,7 +45,7 @@ export default function ProjectDetails({ project, onUpdate }) {
       if (!response.ok) throw new Error('Failed to update project');
       
       const updatedProject = await response.json();
-      onUpdate(updatedProject);
+      handleProjectUpdate(updatedProject);
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating project:', error);
@@ -36,7 +56,7 @@ export default function ProjectDetails({ project, onUpdate }) {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg">
-          {isEditing ? (
+          {isEditing && canEdit ? (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <input
@@ -110,14 +130,16 @@ export default function ProjectDetails({ project, onUpdate }) {
             <div className="space-y-4">
               <div className="flex justify-between items-start">
                 <h1 className="text-2xl font-bold">{project.title}</h1>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="p-2 hover:bg-primary/10 rounded-full text-primary"
-                >
-                  <Edit2 className="w-5 h-5" />
-                </button>
+                {canEdit && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-2 hover:bg-primary/10 rounded-full text-primary"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
               </div>
-
+              
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex items-center space-x-2 text-muted-foreground">
                   <Calendar className="w-5 h-5" />
@@ -125,7 +147,7 @@ export default function ProjectDetails({ project, onUpdate }) {
                 </div>
                 <div className="flex items-center space-x-2 text-muted-foreground">
                   <User className="w-5 h-5" />
-                  <span>{user?.email}</span>
+                  <span>Owner: {project.ownerEmail || user?.email}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-muted-foreground">
                   <Hash className="w-5 h-5" />
@@ -141,6 +163,9 @@ export default function ProjectDetails({ project, onUpdate }) {
             </div>
           )}
         </div>
+
+        {/* Only show member management for project owner */}
+        {isOwner && <ProjectMembers project={project} onUpdate={handleProjectUpdate} />}
 
         <div className="mt-6 flex justify-center">
           <Link
