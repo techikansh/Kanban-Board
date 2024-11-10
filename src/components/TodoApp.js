@@ -270,7 +270,7 @@ const TodoApp = ({ projectId, projectName }) => {
         <div className="mb-8 rounded-lg border bg-card text-card-foreground shadow">
           <div className="flex flex-col space-y-1.5 p-6">
             <h1 className="text-2xl font-semibold text-foreground">
-              Kanban Board: {projectName}
+              Kanban Board
             </h1>
             <p className="text-sm text-muted-foreground">
               Organize your tasks efficiently

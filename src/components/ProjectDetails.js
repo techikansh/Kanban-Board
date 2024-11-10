@@ -1,14 +1,13 @@
 "use client";
 import React, { useState } from 'react';
 import { Calendar, DollarSign, Hash, User, Edit2, Check, X, ArrowRight } from 'lucide-react';
-import TodoApp from './TodoApp';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProjectDetails({ project, onUpdate }) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedProject, setEditedProject] = useState(project);
-  const [showTodoApp, setShowTodoApp] = useState(false);
 
   const handleSave = async () => {
     try {
@@ -32,10 +31,6 @@ export default function ProjectDetails({ project, onUpdate }) {
       console.error('Error updating project:', error);
     }
   };
-
-  if (showTodoApp) {
-    return <TodoApp projectId={project._id} projectName={project.title} />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted py-8 px-4">
@@ -148,13 +143,13 @@ export default function ProjectDetails({ project, onUpdate }) {
         </div>
 
         <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => setShowTodoApp(true)}
+          <Link
+            href={`/projects/${project._id}/board`}
             className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground py-2 px-4 text-sm font-medium transition-colors hover:bg-primary/90"
           >
             Open Board
             <ArrowRight className="w-4 h-4 ml-2" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ export default function Header() {
       <div className="container flex h-14 items-center max-w-7xl mx-auto px-4">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold">Project Flow</span>
+            <span className="font-bold text-2xl">Project Flow</span>
           </Link>
         </div>
 
