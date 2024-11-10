@@ -40,7 +40,11 @@ const TodoApp = ({ projectId }) => {
         setProject(projectData);
 
         // Fetch todos for this project
-        const todosResponse = await fetch(`/api/todos?projectId=${projectId}`);
+        const todosResponse = await fetch(`/api/todos?projectId=${projectId}`, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         const todosData = await todosResponse.json();
         setTodos(Array.isArray(todosData) ? todosData : []);
       } catch (error) {
@@ -61,6 +65,7 @@ const TodoApp = ({ projectId }) => {
         text: newTodo.trim(),
         description: newDescription.trim(),
         status: COLUMNS.BACKLOG,
+        projectId: projectId
       };
 
       const response = await fetch("/api/todos", {

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, ArrowRight, Trash2, Search, Calendar, SlidersHorizontal, X } from 'lucide-react';
+import { Plus, ArrowRight, Trash2, Search, Calendar, SlidersHorizontal, X, DollarSign, Hash } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProjectList() {
@@ -14,7 +14,8 @@ export default function ProjectList() {
     title: '',
     description: '',
     dueDate: '',
-    clientPayment: ''
+    clientPayment: '',
+    storyPoints: ''
   });
   const router = useRouter();
   const { user } = useAuth();
@@ -51,7 +52,7 @@ export default function ProjectList() {
       const savedProject = await response.json();
       setProjects(prev => [...prev, savedProject]);
       setShowCreateForm(false);
-      setNewProject({ title: '', description: '', dueDate: '', clientPayment: '' });
+      setNewProject({ title: '', description: '', dueDate: '', clientPayment: '', storyPoints: '' });
     } catch (error) {
       console.error('Error creating project:', error);
     }
@@ -159,7 +160,7 @@ export default function ProjectList() {
                   placeholder="Project Description"
                   className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[100px]"
                 />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <input
                     type="date"
                     value={newProject.dueDate}
@@ -175,6 +176,13 @@ export default function ProjectList() {
                     value={newProject.clientPayment}
                     onChange={(e) => setNewProject({...newProject, clientPayment: e.target.value})}
                     placeholder="Client Payment"
+                    className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  <input
+                    type="number"
+                    value={newProject.storyPoints}
+                    onChange={(e) => setNewProject({...newProject, storyPoints: e.target.value})}
+                    placeholder="Story Points"
                     className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
@@ -201,12 +209,16 @@ export default function ProjectList() {
             {projects.map((project) => (
               <div
                 key={project._id}
-                className="group rounded-xl border bg-card/50 backdrop-blur-sm p-6 shadow-sm hover:shadow-md transition-all duration-200"
+                className="group rounded-xl border bg-card/50 backdrop-blur-sm p-6 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => router.push(`/projects/${project._id}`)}
               >
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-semibold">{project.title}</h2>
                   <button
-                    onClick={() => handleDeleteProject(project._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteProject(project._id);
+                    }}
                     className="opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center rounded-full p-2 text-sm font-medium hover:bg-destructive hover:text-destructive-foreground"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -215,22 +227,20 @@ export default function ProjectList() {
                 <p className="text-muted-foreground mb-4 line-clamp-2">
                   {project.description}
                 </p>
-                <div className="space-y-2 mb-4">
+                <div className="space-y-2">
                   <div className="flex items-center text-sm">
                     <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
                     {project.dueDate ? new Date(project.dueDate).toLocaleDateString('de-DE') : 'No due date'}
                   </div>
-                  <div className="text-sm font-medium">
-                    ${project.clientPayment || 0}
+                  <div className="flex items-center text-sm">
+                    <DollarSign className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <span>${project.clientPayment || 0}</span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <Hash className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <span>{project.storyPoints || 0} Story Points</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => router.push(`/projects/${project._id}`)}
-                  className="w-full rounded-lg bg-primary/10 hover:bg-primary/20 text-primary py-2 px-4 flex items-center justify-center transition-colors"
-                >
-                  Open Board
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </button>
               </div>
             ))}
           </div>
