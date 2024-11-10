@@ -1,7 +1,9 @@
-import TodoApp from '../components/TodoApp';
+import ProjectList from '@/components/ProjectList';
 
 export default function Home() {
-    return <main>
-      <TodoApp />
-    </main>;
+  return (
+    <main>
+      <ProjectList />
+    </main>
+  );
 }
