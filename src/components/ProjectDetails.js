@@ -147,7 +147,7 @@ export default function ProjectDetails({ project: initialProject, onUpdate }) {
                 </div>
                 <div className="flex items-center space-x-2 text-muted-foreground">
                   <User className="w-5 h-5" />
-                  <span>Owner: {project.ownerEmail || user?.email}</span>
+                  <span>Owner: {project.ownerEmail || project.userId}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-muted-foreground">
                   <Hash className="w-5 h-5" />

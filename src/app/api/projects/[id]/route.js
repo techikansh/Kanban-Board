@@ -13,13 +13,45 @@ export async function GET(request, { params }) {
     }
 
     const db = await connectToDatabase();
-    const project = await db.collection('projects').findOne({
-      _id: new ObjectId(id),
-      $or: [
-        { userId: session.user.id },
-        { 'members.userId': session.user.id }
-      ]
-    });
+    const project = await db.collection('projects')
+      .aggregate([
+        {
+          $match: {
+            _id: new ObjectId(id),
+            $or: [
+              { userId: session.user.id },
+              { 'members.userId': session.user.id }
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            let: { userId: '$userId' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
+                }
+              },
+              {
+                $project: { email: 1 }
+              }
+            ],
+            as: 'owner'
+          }
+        },
+        {
+          $addFields: {
+            ownerEmail: { $arrayElemAt: ['$owner.email', 0] }
+          }
+        },
+        {
+          $project: {
+            owner: 0
+          }
+        }
+      ]).next();
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
