@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { PlusCircle, GripVertical, X, Edit2, Check, Trash2 } from 'lucide-react';
 import EditModal from './EditModal';
+import CustomPieChart from './CustomPieChart';
 
 const COLUMNS = {
   BACKLOG: 'Backlog',
@@ -11,24 +12,9 @@ const COLUMNS = {
 
 const TodoApp = () => {
   const [todos, setTodos] = useState([
-    { 
-      id: 1, 
-      text: "Complete project presentation", 
-      description: "Prepare slides and demo for the quarterly review",
-      status: COLUMNS.BACKLOG 
-    },
-    { 
-      id: 2, 
-      text: "Review pull requests", 
-      description: "Review and merge pending PRs from the team",
-      status: COLUMNS.DOING 
-    },
-    { 
-      id: 3, 
-      text: "Update documentation", 
-      description: "Update API documentation with new endpoints",
-      status: COLUMNS.DONE 
-    }
+    { id: 1, text: "Complete project presentation", description: "Prepare slides and demo for the quarterly review", status: COLUMNS.BACKLOG },
+    { id: 2, text: "Review pull requests", description: "Review and merge pending PRs from the team", status: COLUMNS.DOING },
+    { id: 3, text: "Update documentation", description: "Update API documentation with new endpoints", status: COLUMNS.DONE }
   ]);
   const [newTodo, setNewTodo] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -37,6 +23,7 @@ const TodoApp = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
   const [newDescription, setNewDescription] = useState("");
+  const [showChart, setShowChart] = useState(false);
 
   const addTodo = (e) => {
     e.preventDefault();
@@ -147,6 +134,12 @@ const TodoApp = () => {
     </div>
   );
 
+  const taskDistribution = [
+    { id: 'Backlog', value: todos.filter(todo => todo.status === COLUMNS.BACKLOG).length },
+    { id: 'Doing', value: todos.filter(todo => todo.status === COLUMNS.DOING).length },
+    { id: 'Done', value: todos.filter(todo => todo.status === COLUMNS.DONE).length },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -161,9 +154,9 @@ const TodoApp = () => {
                 type="text"
                 value={newTodo}
                 onChange={(e) => setNewTodo(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyPress={(e) => e.key === 'Enter' && addTodo(e)}
                 placeholder="Task title..."
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               />
               <textarea
                 value={newDescription}
@@ -181,12 +174,27 @@ const TodoApp = () => {
             </div>
           </div>
         </div>
-
         <div className="flex gap-4 overflow-x-auto pb-4">
           {Object.values(COLUMNS).map(status => (
             <TodoColumn key={status} status={status} />
           ))}
         </div>
+        <div className="flex items-center justify-center mt-4">
+          <label className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input
+                type="checkbox"
+                className="hidden"
+                checked={showChart}
+                onChange={() => setShowChart(!showChart)}
+              />
+              <div className="block bg-gray-300 w-12 h-7 rounded-full"></div>
+              <div className={`dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition ${showChart ? 'transform translate-x-full bg-blue-500' : ''}`}></div>
+            </div>
+            <span className="ml-3 text-sm font-medium text-gray-700">{showChart ? 'Hide Graph' : 'Show Graph'}</span>
+          </label>
+        </div>
+        {showChart && <CustomPieChart data={taskDistribution} className="mt-4" />}
       </div>
       <EditModal
         isOpen={isModalOpen}
